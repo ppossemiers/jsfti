@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>JSFTI</title>
+    <link rel="stylesheet" href="style/main.css" type="text/css">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" /> 
+  </head>
+  <body>
+  	<div id="input"><label>Search for : </label><input type="text" id="query" size="60">
+  	<button onclick="searchDB(query.value, false);">FullText Search</button>
+  	<button onclick="searchDB(query.value, true);">Field Search</button>
+  	<br><br><br>
+  	<div id="input"><label>Database to index : </label><input type="text" id="db">
+  	<button onclick="FTIndexer.indexDB(db.value);">Index DB</button>
+  	<br><br>
+  	<h2>Result</h2>
+  	<div id="searchResults"></div>
+  </body>
+  <script src="vendor/couchapp/loader.js"></script>
+  <script src="scripts/jsfti.js"></script>
+  <script src="scripts/main.js"></script>
+</html>
