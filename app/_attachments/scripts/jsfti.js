@@ -62,17 +62,13 @@ FTIndexer = {
 	},
 	
 	searchDB: function(query, checkFields, callback){
+		if(query == ''){ return }
 		if(checkFields == true){
-			FTIndexer._searchDB: function(query, function(val){
-					if(//check the fields here and pass it to the real callabck if the match){
-						callback.call(this, val);
-					}
-				}
-			);
+			FTIndexer._searchDB(query, function(val){
+					if(true){ callback.call(this, val); }
+				});
 		}
-		else{
-			FTIndexer._searchDB: function(query, callback);
-		}
+		else{ FTIndexer._searchDB(query, callback); }
 	},
 	
 	_searchDB: function(query, callback){
@@ -89,10 +85,11 @@ FTIndexer = {
 			andInput = orTerm.split(' and ');
 			andRequests = [];
 			intersect = [];
+			var endResult = [];
 			$.each(andInput, function(key, andTerm){ andRequests.push($.ajax('../../../' + INDEX_DB + '/' + andTerm)); });
+			intersectStart = true;
 			$.when.apply($, andRequests).done(function(){
 			    $.each(arguments, function(key, val){
-			    	intersectStart = true;
 			    	// single 'or' term
 			    	if(!(val instanceof Array)){
 			    		// get the keyword
@@ -100,10 +97,8 @@ FTIndexer = {
 			    			index = JSON.parse(val.responseText);
 			    			docs = index.docs;
 					    	$.each(docs, function(key, val){
-					    		if(Util.isObjectInArray(val, endResult) == -1){
-					    			val.word = orTerm;
-					    			callback.call(this, val);
-					    		}
+					    		val.word = orTerm;
+					    		callback.call(this, val);
 					    	});
 			    		}
 			    	}
@@ -112,7 +107,7 @@ FTIndexer = {
 				    	index = JSON.parse(val[2].responseText);
 				    	docs = index.docs;
 				    	// add searched word to docs
-				    	$.each(docs, function(key, val){ val.word = orTerm; });
+				    	$.each(docs, function(key, val){ val.word = orTerm.replace(/ and /g, ','); });
 				    	// first run, nothing to intersect yet
 				    	if(intersectStart == true){
 			    			intersect = docs;
@@ -127,13 +122,19 @@ FTIndexer = {
 			});
 		});
 	},
+	
+	getWordFrequency: function(word, callback){
+		$.when($.ajax('../../../' + INDEX_DB + '/' + word.toLowerCase())).done(function(ajaxArgs){
+			callback.call(this, JSON.parse(ajaxArgs).docs.length);
+		});
+	},
 
 	indexDB: function(db){
-		$('body').css('cursor', 'progress');
 		$.couch.db(INDEX_DB).drop({
 		    success: function(data) {
 		    	$.couch.db(INDEX_DB).create({});
 		    	// save the name of the indexed db
+		    	// not used now, but necessary for includeDocs
 		    	var doc = {'_id':'indexeddbname_','name':db};
 				$.couch.db(INDEX_DB).saveDoc(doc, {});
 		    	$.couch.db(db).allDocs({
@@ -145,7 +146,6 @@ FTIndexer = {
 					    		});
 				    		}
 						});
-				    	$('body').css('cursor', 'auto');
 				    }
 				});
 		    },
@@ -206,13 +206,14 @@ Util = {
 	    return r;
 	},
 	
-	// check if key (part of object) is in array
+	// check if key (part of object) is in array 
+	// and return the field
 	isKeyInArray: function(key, arr){
-		var r = -1;
+		var f = '';
 	    $.grep(arr, function(n, i){
-	        if(n.doc == key){ r = 0 };
+	        if(n.doc == key){ f = n.field; };
 	    });
-	    return r;
+	    return f;
 	},
 	
 	removeKeyInArray: function(key, arr){
@@ -221,17 +222,19 @@ Util = {
 		return newArr;
 	},
 	
-	intersect: function(arr1, arr2){
+	intersect: function(arr1, arr2, fields){
 		var result = [];
+		var field;
 		// nothing in common, because one array is empty
 		if(arr1.length == 0 || arr2.length == 0){
 			return result;
 		}
 		$.each(arr1, function(key, val){
-			if(Util.isKeyInArray(val.doc, arr2) == 0
-					&& Util.isKeyInArray(val.doc, result) == -1){
+			if((field = Util.isKeyInArray(val.doc, arr2)) != ''
+					&& Util.isObjectInArray(val, result) == -1){
+				val.field += ',' + field;
 				result.push(val);
-		    }
+			}
 		});
 		return result;
 	},
