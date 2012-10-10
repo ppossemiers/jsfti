@@ -1,15 +1,14 @@
-function searchDB(query, checkFields){
+function searchDB(query){
 	$('#searchResults').empty();
 	$('#searchResults').append('<h2>Search Results</h2>');
-	FTIndexer.getWordFrequency('PSY', printResult);
-	FTIndexer.searchDB(query, checkFields, getResult);
+	FTIndexer.searchDB(query, function(result){
+		$('#searchResults').append('<li>' + result.doc + ' : ' + result.word + ' in ' + result.field);
+	});
 }
 
-function getResult(result){
-	console.log(result);
-	$('#searchResults').append('<li>' + result.doc + ' : ' + result.word + ' in ' + result.field);
+function getWordFrequency(word){
+	FTIndexer.getWordFrequency(word, function test(r){ 
+		alert('Frequency : ' + r); 
+	});
 }
 
-function printResult(result){
-	console.log('Frequency : ' + result)
-}

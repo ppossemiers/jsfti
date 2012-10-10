@@ -6,12 +6,14 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" /> 
   </head>
   <body>
-  	<div id="input"><label>Search for : </label><input type="text" id="query" size="60">
-  	<button onclick="searchDB(query.value, false);">FullText Search</button>
-  	<button onclick="searchDB(query.value, true);">Field Search</button>
+  	<div id="input1"><label>Search for : </label><input type="text" id="query" size="60" />
+  	<button onclick="searchDB(query.value)">Go!</button>
   	<br><br><br>
-  	<div id="input"><label>Database to index : </label><input type="text" id="db">
-  	<button onclick="FTIndexer.indexDB(db.value);">Go!</button>
+  	<div id="input2"><label>Database to index : </label><input type="text" id="db" />
+  	<button onclick="FTIndexer.indexDB(db.value)">Go!</button>
+  	<br><br><br>
+  	<div id="input3"><label>Occurences of word : </label><input type="text" id="word" />
+  	<button onclick="getWordFrequency(word.value)">Go!</button>
   	<br><br>
   	<div id="searchResults"></div>
   </body>

@@ -17,7 +17,7 @@ STOPWORDS = ["a", "an", "and", "are", "as", "at", "be", "but",
 		     "no", "not", "of", "on", "or", "s", "such", "t",
 		     "that", "the", "their", "they", "then", "there", 
 		     "these", "this", "to", "was", "will", "with"];
-INDEX_DB = 'jsfti1';
+INDEX_DB = 'jsfti';
 
 FTIndexer = {
 	addDoc: function(doc){
@@ -61,17 +61,8 @@ FTIndexer = {
 		$.when(FTIndexer.removeDoc(doc._id)).done(FTIndexer.addDoc(doc));
 	},
 	
-	searchDB: function(query, checkFields, callback){
+	searchDB: function(query, callback){
 		if(query == ''){ return }
-		if(checkFields == true){
-			FTIndexer._searchDB(query, function(val){
-					if(true){ callback.call(this, val); }
-				});
-		}
-		else{ FTIndexer._searchDB(query, callback); }
-	},
-	
-	_searchDB: function(query, callback){
 		var orRequest;
 		var index;
 		var andRequests = [];
@@ -130,6 +121,7 @@ FTIndexer = {
 	},
 
 	indexDB: function(db){
+		if(db == ''){ return }
 		$.couch.db(INDEX_DB).drop({
 		    success: function(data) {
 		    	$.couch.db(INDEX_DB).create({});
