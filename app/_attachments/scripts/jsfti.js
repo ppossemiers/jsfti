@@ -11,15 +11,76 @@
  * See the License for the specific language governing permissions
  * and limitations under the License.
  */
+
+"use strict";
  
-STOPWORDS = ["a", "an", "and", "are", "as", "at", "be", "but",
+var STOPWORDS = ["a", "an", "and", "are", "as", "at", "be", "but",
 		     "by", "for", "if", "in", "into", "is", "it", "no",
 		     "no", "not", "of", "on", "or", "s", "such", "t",
 		     "that", "the", "their", "they", "then", "there", 
 		     "these", "this", "to", "was", "will", "with"];
-INDEX_DB = 'jsfti';
+var INDEX_DB = 'jsfti1';
 
-FTIndexer = {
+var Util = {
+		split: function(indexString){
+			var results = [];
+			var words = indexString.toLowerCase().split(/\s+/);
+			$.each(words, function(key, val){
+				var w = val.replace(/[,\."]+/g, "");
+				if(w.length > 0 && ($.inArray(w, STOPWORDS) === -1)){ results[results.length] = w; }
+			});
+			return results;
+		},
+		
+		// check if object is in array
+		isObjectInArray: function(entry, arr){
+			var r = -1;
+		    $.grep(arr, function(n, i){
+		        if(n.doc === entry.doc && n.field === entry.field){ r = 0; }
+		    });
+		    return r;
+		},
+		
+		// check if key (part of object) is in array 
+		// and return the field
+		isKeyInArray: function(key, arr){
+			var f = '';
+		    $.grep(arr, function(n, i){
+		        if(n.doc === key){ f = n.field; }
+		    });
+		    return f;
+		},
+		
+		removeKeyInArray: function(key, arr){
+			var newArr;
+			newArr = $.grep(arr, function(n){ return n.doc !== key; });
+			return newArr;
+		},
+		
+		intersect: function(arr1, arr2, fields){
+			var result = [];
+			var field;
+			// nothing in common, because one array is empty
+			if(arr1.length === 0 || arr2.length === 0){
+				return result;
+			}
+			$.each(arr1, function(key, val){
+				if((field = Util.isKeyInArray(val.doc, arr2)) !== ''
+						&& Util.isObjectInArray(val, result) === -1){
+					val.field += ',' + field;
+					result.push(val);
+				}
+			});
+			return result;
+		},
+		
+		setStopWords: function(arr, append){
+			if(append === true){ $.each(arr, function(key, val){ STOPWORDS.push(val); }); }
+			else{ STOPWORDS = arr; }
+		}
+};
+
+var FTIndexer = {
 	addDoc: function(doc){
 		var docID = doc._id;
 		$.each(doc, function(field, val){
@@ -27,8 +88,8 @@ FTIndexer = {
 		    var words = Util.split(val);
 			$.each(words, function(idx, word){
 				// don't index id and rev fields
-				if(field != '_id'){
-					if(field != '_rev'){ FTIndexer.addIndex(word, docID, field); }
+				if(field !== '_id'){
+					if(field !== '_rev'){ FTIndexer.addIndex(word, docID, field); }
 				}
 		    });
 		});
@@ -39,7 +100,7 @@ FTIndexer = {
 		    success: function(data){
 		    	$.each(data.rows, function(key, val){
 		    		// leave design docs alone
-		    		if(val.id != '_design/app'){
+		    		if(val.id !== '_design/app'){
 		    			$.couch.db(INDEX_DB).openDoc(val.id, {
 		    				success: function(data){
 		    					var docs = Util.removeKeyInArray(docID, data.docs);
@@ -62,7 +123,7 @@ FTIndexer = {
 	},
 	
 	searchDB: function(query, callback){
-		if(query == ''){ return }
+		if(query === ''){ return }
 		var orRequest;
 		var index;
 		var andRequests = [];
@@ -132,7 +193,7 @@ FTIndexer = {
 		    	$.couch.db(db).allDocs({
 				    success: function(data){
 				    	$.each(data.rows, function(key, val){
-				    		if(val.id != '_design/app'){
+				    		if(val.id !== '_design/app'){
 					    		$.couch.db(db).openDoc(val.id, {
 					    		    success: function(data){ FTIndexer.addDoc(data); }
 					    		});
@@ -156,7 +217,7 @@ FTIndexer = {
 		$.couch.db(INDEX_DB).openDoc(word, {
 			success: function(data){
 				// avoid duplicates
-				if(Util.isObjectInArray(d, data.docs) == -1){
+				if(Util.isObjectInArray(d, data.docs) === -1){
 					data.docs.push(d);
 					$.couch.db(INDEX_DB).saveDoc(data, {
 					    error: function(status) {
@@ -177,62 +238,3 @@ FTIndexer = {
 		});
 	}
 };
-
-Util = {
-	split: function(indexString){
-		var results = new Array();
-		var words = indexString.toLowerCase().split(/\s+/);
-		$.each(words, function(key, val){
-			var w = val.replace(/[,\."]+/g, "");
-			if(w.length > 0 && ($.inArray(w, STOPWORDS) == -1)){ results[results.length] = w; }
-		});
-		return results;
-	},
-	
-	// check if object is in array
-	isObjectInArray: function(entry, arr){
-		var r = -1;
-	    $.grep(arr, function(n, i){
-	        if(n.doc == entry.doc && n.field == entry.field){ r = 0; }
-	    });
-	    return r;
-	},
-	
-	// check if key (part of object) is in array 
-	// and return the field
-	isKeyInArray: function(key, arr){
-		var f = '';
-	    $.grep(arr, function(n, i){
-	        if(n.doc == key){ f = n.field; };
-	    });
-	    return f;
-	},
-	
-	removeKeyInArray: function(key, arr){
-		var newArr;
-		newArr = $.grep(arr, function(n){ return n.doc != key; });
-		return newArr;
-	},
-	
-	intersect: function(arr1, arr2, fields){
-		var result = [];
-		var field;
-		// nothing in common, because one array is empty
-		if(arr1.length == 0 || arr2.length == 0){
-			return result;
-		}
-		$.each(arr1, function(key, val){
-			if((field = Util.isKeyInArray(val.doc, arr2)) != ''
-					&& Util.isObjectInArray(val, result) == -1){
-				val.field += ',' + field;
-				result.push(val);
-			}
-		});
-		return result;
-	},
-	
-	setStopWords: function(arr, append){
-		if(append == true){ $.each(arr, function(key, val){ STOPWORDS.push(val); }); }
-		else{ STOPWORDS = arr; }
-	}
-}

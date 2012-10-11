@@ -42,7 +42,7 @@ Results are JSON objects in the following format : *{doc='docName', field='field
 	* word is a string that contains one or more searched words  
 An example : if the query 'gangnam and 2012 and PSY or 2006' is launched on the testdata (see higher), then two search result objects are returned :  
 	            1. *{ doc='doc2', field='year', word='2006'}* => this satisfies 'or 2006'  
-	            2. *{ doc='doc1', field='song,year,author', word='gangnam,2012,psy'}* => this satisfies 'gangnam and 2012 and PSY'
+	            2. *{ doc='doc1', field='song,year,author', word='gangnam,2012,psy'}* => this satisfies 'gangnam and 2012 and PSY'  
 
 * To add stopwords (ignored in the indexing process) : **Util.setStopWords(['newStopWord', 'anotherStopWord'], false)**  
 If you use a 'true' value for the last parameter, the existing stopwords array is replaced by the passed stopwords array. Please look at the 'jsfti.js' file to see the stopwords that are used.
