@@ -19,7 +19,8 @@ var STOPWORDS = ["a", "an", "and", "are", "as", "at", "be", "but",
 		     "no", "not", "of", "on", "or", "s", "such", "t",
 		     "that", "the", "their", "they", "then", "there", 
 		     "these", "this", "to", "was", "will", "with"];
-var INDEX_DB = 'jsfti1';
+
+var INDEX_DB = 'jsfti';
 
 var Util = {
 		split: function(indexString){
